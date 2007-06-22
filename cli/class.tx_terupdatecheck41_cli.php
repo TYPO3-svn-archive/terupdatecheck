@@ -27,12 +27,13 @@
  * @author	Christian Welzel <gawain@camlann.de>
  */
 
-class tx_terupdatecheck2_cli {
+class tx_terupdatecheck41_cli {
 
 	function main($dev, $shy, $not) {
-	    global $LANG;
+		global $LANG;
 
-	    list($list,)=$this->pObj->getInstalledExtensions();
+		$tmp = & $this->pObj->getInstalledExtensions();
+		$list = & $tmp[0];
 
 	    $content =  sprintf("%-30s %-20s %-15s %-15s\n%-79s\n",
 			$LANG->getLL('tab_mod_name'), $LANG->getLL('tab_mod_key'),
@@ -41,26 +42,32 @@ class tx_terupdatecheck2_cli {
 
 	    $diff = $dev ? 1 : 1000;
 
-	    $this->pObj->xmlhandler->loadExtensionsXML();
+		reset($list);
+		while (list($name,) = each($list)) {
+			$data = & $list[$name];
 
-	    foreach($list as $name => $data) {
-		if(!is_array($this->pObj->xmlhandler->extensionsXML[$name])) continue;
+			$this->pObj->xmlhandler->searchExtensionsXML($name, NULL, NULL, true, true);
 
-		$versions = array_keys($this->pObj->xmlhandler->extensionsXML[$name][versions]);
-		$lastversion = $versions[count($versions)-1];
-		$comment = $this->pObj->xmlhandler->extensionsXML[$name][versions][$lastversion][uploadcomment];
+			if(!is_array($this->pObj->xmlhandler->extensionsXML[$name])) continue;
+
+			$v = & $this->pObj->xmlhandler->extensionsXML[$name][versions];
+			$versions = array_keys($v);
+			$lastversion = end($versions);
+			$comment = $this->pObj->xmlhandler->extensionsXML[$name][versions][$lastversion][uploadcomment];
 
 	        if( (t3lib_extMgm::isLoaded($name) || $not) &&
-		    ($data[EM_CONF][shy] == 0 || $shy) &&
-		    $this->pObj->versionDifference($lastversion, $data[EM_CONF][version], $diff))
-		{
-		    $content .= sprintf("%-30s %-20s %-15s %-15s\n%-79s\n\n",
-				$data[EM_CONF][title],
-				$name,
-			        $data[EM_CONF][version],
-				$lastversion,
-				wordwrap(nl2br($comment)));
-		}
+		    	($data[EM_CONF][shy] == 0 || $shy) &&
+		    	$this->pObj->versionDifference($lastversion, $data[EM_CONF][version], $diff))
+			{
+		    	$content .= sprintf("%-30s %-20s %-15s %-15s\n%-79s\n\n",
+					$data[EM_CONF][title],
+					$name,
+					$data[EM_CONF][version],
+					$lastversion,
+					wordwrap(nl2br($comment)));
+			}
+
+			$this->pObj->xmlhandler->freeExtensionsXML();
 	    }
 
 	    echo $content;
@@ -68,8 +75,8 @@ class tx_terupdatecheck2_cli {
 
 }
 
-if (defined("TYPO3_MODE") && $TYPO3_CONF_VARS[TYPO3_MODE]["XCLASS"]["ext/ter_update_check/cli/class.tx_terupdatecheck2_cli.php"])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]["XCLASS"]["ext/ter_update_check/cli/class.tx_terupdatecheck2_cli.php"]);
+if (defined("TYPO3_MODE") && $TYPO3_CONF_VARS[TYPO3_MODE]["XCLASS"]["ext/ter_update_check/cli/class.tx_terupdatecheck41_cli.php"])	{
+	include_once($TYPO3_CONF_VARS[TYPO3_MODE]["XCLASS"]["ext/ter_update_check/cli/class.tx_terupdatecheck41_cli.php"]);
 }
 
 ?>

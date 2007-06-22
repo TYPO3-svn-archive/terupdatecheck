@@ -173,6 +173,8 @@ class tx_terupdatecheck41_modfunc1 extends t3lib_extobjbase {
 				$warn.
 				'<tr class="bgColor4"><td colspan="7"><hr style="margin:0px" /></td></tr>'."\n";
 		}
+
+			$this->pObj->xmlhandler->freeExtensionsXML();
 	    }
 
 	    $content[] = '</table><br/>';

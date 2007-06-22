@@ -1,4 +1,4 @@
-#! /usr/bin/php4 -q
+#! /usr/bin/php -q
 <?php
 
 // *****************************************
@@ -28,6 +28,7 @@ require(dirname(PATH_thisScript).'/'.$BACK_PATH.'template.php');
 # HERE you run your application!
 require_once(dirname(PATH_thisScript).'/'.$BACK_PATH.'/mod/tools/em/class.em_index.php');
 require(dirname(PATH_thisScript).'/class.tx_terupdatecheck2_cli.php');
+require(dirname(PATH_thisScript).'/class.tx_terupdatecheck41_cli.php');
 
 require(dirname(PATH_thisScript).'/../modfunc1/locallang.php');
 
@@ -59,8 +60,19 @@ echo "Updating extension information...\n";
 echo strip_tags($emObj->fetchMetaData('extensions'));
 echo "\n\n";
 
-$cli =& t3lib_div::makeInstance('tx_terupdatecheck2_cli');
-$cli->pObj = $emObj;
-$cli->main($dev, $shy, $not);
+$cli = 0;
+if(t3lib_div::int_from_ver(TYPO3_version) >= 4000000) {
+	$cli =& t3lib_div::makeInstance('tx_terupdatecheck2_cli');
+	if(t3lib_div::int_from_ver(TYPO3_version) >= 4001000) {
+		$cli =& t3lib_div::makeInstance('tx_terupdatecheck41_cli');
+	}
+	else {
+	}
+	$cli->pObj = $emObj;
+	$cli->main($dev, $shy, $not);
+}
+else {
+	print "Your Typo3 Version is not supported by this CLI script.";
+}
 
 ?>
