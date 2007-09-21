@@ -12,10 +12,10 @@ define('TYPO3_cliMode', TRUE);
 	// This will work as long as the script is called by it's absolute path!
 define('PATH_thisScript',$_ENV['_']?$_ENV['_']:$_SERVER['_']);
 
-set_include_path(get_include_path.PATH_SEPARATOR.dirname(PATH_thisScript).'/'.$BACK_PATH.'/mod/tools/em/');
-
 	// Include configuration file:
 require(dirname(PATH_thisScript).'/conf.php');
+
+set_include_path(get_include_path().PATH_SEPARATOR.dirname(PATH_thisScript).'/'.$BACK_PATH.'mod/tools/em/');
 
 	// Include init file:
 require(dirname(PATH_thisScript).'/'.$BACK_PATH.'init.php');
