@@ -28,6 +28,7 @@
  */
 
 require_once(PATH_t3lib."class.t3lib_extobjbase.php");
+require_once(t3lib_extMgm::extPath('ter_update_check')."class.tx_terupdatecheck_sort.php");
 
 class tx_terupdatecheck41_modfunc1 extends t3lib_extobjbase {
 
@@ -112,9 +113,6 @@ class tx_terupdatecheck41_modfunc1 extends t3lib_extobjbase {
 
 	    $diff = $this->pObj->MOD_SETTINGS['tx_ter_update_check_display_devupd'] ? 1 : 1000;
 
-#		$this->pObj->xmlhandler->searchExtensionsXML('', '', '', true);
-#	    $this->pObj->xmlhandler->loadExtensionsXML();
-
 	    reset($list);
 	    while (list($name,) = each($list)) {
 			$data = & $list[$name];
@@ -125,13 +123,14 @@ class tx_terupdatecheck41_modfunc1 extends t3lib_extobjbase {
 
 			$v = & $this->pObj->xmlhandler->extensionsXML[$name][versions];
 			$versions = array_keys($v);
+			usort($versions, array('tx_terupdatecheck_sort', 'compare'));
 			$lastversion = end($versions);
 
 	        if( (t3lib_extMgm::isLoaded($name) || $this->pObj->MOD_SETTINGS['tx_ter_update_check_display_installed']) &&
 		    ($data[EM_CONF][shy] == 0 || $this->pObj->MOD_SETTINGS['display_shy']) &&
 		    $this->pObj->versionDifference($lastversion, $data[EM_CONF][version], $diff))
 		{
-	            $imgInfo = @getImageSize($this->pObj->getExtPath($name,$data['type']).'/ext_icon.gif');
+			$imgInfo = @getImageSize($this->pObj->getExtPath($name,$data['type']).'/ext_icon.gif');
 		    if (is_array($imgInfo)) {
 		        $icon = '<img src="'.$GLOBALS['BACK_PATH'].$this->pObj->typeRelPaths[$data['type']].$name.'/ext_icon.gif'.'" '.$imgInfo[3].' alt="" />';
 		    } elseif ($extInfo['_ICON']) {
@@ -151,22 +150,29 @@ class tx_terupdatecheck41_modfunc1 extends t3lib_extobjbase {
 		    }
 		    $comment .= '</table>';
 
-		    $currentMd5Array = $this->pObj->serverExtensionMD5Array($name,$data);
+			$serverMD5Array = $this->pObj->serverExtensionMD5Array($name,$data);
+			if (is_array($serverMD5Array))   {
+				ksort($serverMD5Array);
+			}
+			$currentMD5Array = unserialize($data['EM_CONF']['_md5_values_when_last_written']);
+			if (is_array($currentMD5Array)) {
+				ksort($currentMD5Array);
+			}
 
 		    $warn = '';
-		    if (strcmp($data['EM_CONF']['_md5_values_when_last_written'],serialize($currentMd5Array)))   {
+		    if (strcmp(serialize($currentMD5Array), serialize($serverMD5Array)))   {
 		        $warn = '<tr class="bgColor4" style="color:red"><td colspan="7">'.$GLOBALS['TBE_TEMPLATE']->rfw('<br /><strong>'.$name.': '.$LANG->getLL('msg_warn_diff').'</strong>').'</td></tr>'."\n";
-			if($this->pObj->MOD_SETTINGS['tx_ter_update_check_display_files'] == 1) {
-			    $affectedFiles = $this->pObj->findMD5ArrayDiff($currentMd5Array,unserialize($data['EM_CONF']['_md5_values_when_last_written']));
-			    if (count($affectedFiles))
-				$warn .= '<tr class="bgColor4"><td colspan="7"><strong>'.$LANG->getLL('msg_modified').'</strong><br />'.$GLOBALS['TBE_TEMPLATE']->rfw(implode('<br />',$affectedFiles)).'</td></tr>'."\n";
-			}
+				if($this->pObj->MOD_SETTINGS['tx_ter_update_check_display_files'] == 1) {
+			    	$affectedFiles = $this->pObj->findMD5ArrayDiff($serverMD5Array,$currentMD5Array);
+			    	if (count($affectedFiles))
+					$warn .= '<tr class="bgColor4"><td colspan="7"><strong>'.$LANG->getLL('msg_modified').'</strong><br />'.$GLOBALS['TBE_TEMPLATE']->rfw(implode('<br />',$affectedFiles)).'</td></tr>'."\n";
+				}
 		    }
 
 		    $content[] = '<tr class="bgColor4"><td valign="top">'.$icon.'</td>'.
-			        '<td valign="top"><a href="?CMD[importExtInfo]='.$name.'">'.$data[EM_CONF][title].'</a></td>'.
+				'<td valign="top"><a href="?CMD[importExtInfo]='.$name.'">'.$data[EM_CONF][title].'</a></td>'.
 				'<td valign="top">'.$name.'</td>'.
-			        '<td valign="top" align="right">'.$data[EM_CONF][version].'</td>'.
+				'<td valign="top" align="right">'.$data[EM_CONF][version].'</td>'.
 				'<td valign="top" align="right">'.$lastversion.'</td>'.
 				'<td valign="top" nowrap="nowrap">'.$this->pObj->typeLabels[$data['type']].(strlen($data['doubleInstall'])>1?'<strong> '.$GLOBALS['TBE_TEMPLATE']->rfw($extInfo['doubleInstall']).'</strong>':'').'</td>'.
 				'<td valign="top">'.$comment.'</td></tr>'."\n".

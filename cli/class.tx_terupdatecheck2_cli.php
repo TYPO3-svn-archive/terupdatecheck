@@ -27,6 +27,8 @@
  * @author	Christian Welzel <gawain@camlann.de>
  */
 
+require_once(t3lib_extMgm::extPath('ter_update_check')."class.tx_terupdatecheck_sort.php");
+
 class tx_terupdatecheck2_cli {
 
 	function main($dev, $shy, $not) {
@@ -47,6 +49,7 @@ class tx_terupdatecheck2_cli {
 		if(!is_array($this->pObj->xmlhandler->extensionsXML[$name])) continue;
 
 		$versions = array_keys($this->pObj->xmlhandler->extensionsXML[$name][versions]);
+		usort($versions, array('tx_terupdatecheck_sort', 'compare'));
 		$lastversion = $versions[count($versions)-1];
 		$comment = $this->pObj->xmlhandler->extensionsXML[$name][versions][$lastversion][uploadcomment];
 

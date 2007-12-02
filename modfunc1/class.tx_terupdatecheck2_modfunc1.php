@@ -28,6 +28,7 @@
  */
 
 require_once(PATH_t3lib."class.t3lib_extobjbase.php");
+require_once(t3lib_extMgm::extPath('ter_update_check')."class.tx_terupdatecheck_sort.php");
 
 class tx_terupdatecheck2_modfunc1 extends t3lib_extobjbase {
 
@@ -122,6 +123,7 @@ class tx_terupdatecheck2_modfunc1 extends t3lib_extobjbase {
 
 		$v = & $this->pObj->xmlhandler->extensionsXML[$name][versions];
 		$versions = array_keys($v);
+		usort($versions, array('tx_terupdatecheck_sort', 'compare'));
 		$lastversion = end($versions);
 
 	        if( (t3lib_extMgm::isLoaded($name) || $this->pObj->MOD_SETTINGS['tx_ter_update_check_display_installed']) &&
